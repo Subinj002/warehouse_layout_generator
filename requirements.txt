@@ -1,0 +1,30 @@
+# Core dependencies
+numpy>=1.24.0
+scipy>=1.10.0
+matplotlib>=3.7.0
+pandas>=2.0.0
+
+# CAD integration
+ezdxf>=1.0.0
+
+# Optimization and AI
+scikit-learn>=1.2.0
+tensorflow>=2.12.0  # For AI layout generation
+joblib>=1.2.0
+
+# UI components
+PyQt6>=6.5.0  # For desktop GUI
+flask>=2.3.0  # For web interface
+jinja2>=3.1.0  # Templates for web UI
+
+# Utility
+shapely>=2.0.0  # For geometric operations
+pydantic>=2.0.0  # For data validation and config schema
+jsonschema>=4.17.0  # For JSON config validation
+
+# Development and testing
+pytest>=7.3.0
+black>=23.3.0
+isort>=5.12.0
+flake8>=6.0.0
+mypy>=1.2.0
