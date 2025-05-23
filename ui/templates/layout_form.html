@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warehouse Layout Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 20px;
+            padding-bottom: 40px;
+            background-color: #f8f9fa;
+        }
+        .form-container {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        .section {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+        .section:last-child {
+            border-bottom: none;
+        }
+        .header-logo {
+            max-height: 50px;
+            margin-right: 15px;
+        }
+        .constraint-item {
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+        #layoutPreview {
+            border: 1px solid #ddd;
+            min-height: 400px;
+            background-color: #f8f9fa;
+            margin-top: 20px;
+        }
+        .preview-placeholder {
+            display: flex;
+            height: 100%;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="d-flex align-items-center mb-4">
+            <img src="/static/img/logo.png" alt="Warehouse Layout Generator Logo" class="header-logo">
+            <h1>Warehouse Layout Generator</h1>
+        </header>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <form id="layoutForm" method="post" action="/generate_layout">
+                    <div class="form-container">
+                        <!-- Warehouse Dimensions Section -->
+                        <div class="section">
+                            <h3>Warehouse Dimensions</h3>
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label for="length" class="form-label">Length (m)</label>
+                                    <input type="number" class="form-control" id="length" name="length" min="1" step="0.1" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="width" class="form-label">Width (m)</label>
+                                    <input type="number" class="form-control" id="width" name="width" min="1" step="0.1" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="height" class="form-label">Height (m)</label>
+                                    <input type="number" class="form-control" id="height" name="height" min="1" step="0.1" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Storage Requirements Section -->
+                        <div class="section">
+                            <h3>Storage Requirements</h3>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="storageType" class="form-label">Primary Storage Type</label>
+                                    <select class="form-select" id="storageType" name="storageType" required>
+                                        <option value="" selected disabled>Select storage type</option>
+                                        <option value="pallet_rack">Pallet Rack</option>
+                                        <option value="drive_in">Drive-In Rack</option>
+                                        <option value="cantilever">Cantilever Rack</option>
+                                        <option value="push_back">Push Back Rack</option>
+                                        <option value="flow_rack">Flow Rack</option>
+                                        <option value="mezzanine">Mezzanine</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="capacity" class="form-label">Required Capacity (pallets)</label>
+                                    <input type="number" class="form-control" id="capacity" name="capacity" min="1" required>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="palletSize" class="form-label">Standard Pallet Size</label>
+                                    <select class="form-select" id="palletSize" name="palletSize">
+                                        <option value="1000x1200">1000mm x 1200mm (Euro)</option>
+                                        <option value="1200x1200">1200mm x 1200mm</option>
+                                        <option value="1067x1067">1067mm x 1067mm (US)</option>
+                                        <option value="custom">Custom Size</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="maxWeight" class="form-label">Max Pallet Weight (kg)</label>
+                                    <input type="number" class="form-control" id="maxWeight" name="maxWeight" min="1">
+                                </div>
+                            </div>
+                            
+                            <div id="customPalletSize" class="row mb-3 d-none">
+                                <div class="col-md-6">
+                                    <label for="customPalletLength" class="form-label">Custom Pallet Length (mm)</label>
+                                    <input type="number" class="form-control" id="customPalletLength" name="customPalletLength">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="customPalletWidth" class="form-label">Custom Pallet Width (mm)</label>
+                                    <input type="number" class="form-control" id="customPalletWidth" name="customPalletWidth">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Operational Requirements Section -->
+                        <div class="section">
+                            <h3>Operational Requirements</h3>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="aisleWidth" class="form-label">Minimum Aisle Width (m)</label>
+                                    <input type="number" class="form-control" id="aisleWidth" name="aisleWidth" min="0.5" step="0.1" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="forkliftType" class="form-label">Forklift Type</label>
+                                    <select class="form-select" id="forkliftType" name="forkliftType">
+                                        <option value="counterbalance">Counterbalance</option>
+                                        <option value="reach">Reach Truck</option>
+                                        <option value="narrow_aisle">Narrow Aisle</option>
+                                        <option value="vna">Very Narrow Aisle</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="throughput" class="form-label">Daily Throughput (pallets)</label>
+                                    <input type="number" class="form-control" id="throughput" name="throughput" min="0">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="turnoverRate" class="form-label">Inventory Turnover Rate</label>
+                                    <select class="form-select" id="turnoverRate" name="turnoverRate">
+                                        <option value="high">High (FIFO critical)</option>
+                                        <option value="medium" selected>Medium</option>
+                                        <option value="low">Low (FIFO less important)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fixed Elements Section -->
+                        <div class="section">
+                            <h3>Fixed Elements</h3>
+                            <p>Add fixed elements that cannot be moved (e.g., columns, doors, offices)</p>
+                            
+                            <div id="fixedElementsContainer">
+                                <!-- Template for fixed elements, will be dynamically added via JS -->
+                                <div class="fixed-element-template d-none">
+                                    <div class="constraint-item">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <label class="form-label">Element Type</label>
+                                                <select class="form-select element-type">
+                                                    <option value="column">Column</option>
+                                                    <option value="door">Door</option>
+                                                    <option value="office">Office</option>
+                                                    <option value="barrier">Barrier/Wall</option>
+                                                    <option value="custom">Custom</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="row">
+                                                    <div class="col-6">
+                                                        <label class="form-label">Position X (m)</label>
+                                                        <input type="number" class="form-control element-x" step="0.1">
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <label class="form-label">Position Y (m)</label>
+                                                        <input type="number" class="form-control element-y" step="0.1">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-2">
+                                            <div class="col-md-4">
+                                                <label class="form-label">Width (m)</label>
+                                                <input type="number" class="form-control element-width" step="0.1">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">Length (m)</label>
+                                                <input type="number" class="form-control element-length" step="0.1">
+                                            </div>
+                                            <div class="col-md-4 d-flex align-items-end justify-content-end">
+                                                <button type="button" class="btn btn-danger remove-element">Remove</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-center mt-3">
+                                <button type="button" id="addFixedElement" class="btn btn-outline-primary">+ Add Fixed Element</button>
+                            </div>
+                        </div>
+
+                        <!-- Optimization Preferences Section -->
+                        <div class="section">
+                            <h3>Optimization Preferences</h3>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="optimizationGoal" class="form-label">Primary Goal</label>
+                                    <select class="form-select" id="optimizationGoal" name="optimizationGoal">
+                                        <option value="capacity">Maximize Storage Capacity</option>
+                                        <option value="efficiency">Maximize Operational Efficiency</option>
+                                        <option value="balance">Balanced Approach</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="aiLevel" class="form-label">AI Optimization Level</label>
+                                    <select class="form-select" id="aiLevel" name="aiLevel">
+                                        <option value="standard">Standard</option>
+                                        <option value="advanced">Advanced</option>
+                                        <option value="extreme">Extreme (slower processing)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Additional Constraints</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="zoning" name="constraints[]" value="zoning">
+                                    <label class="form-check-label" for="zoning">Enable product zoning</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="flowOptimization" name="constraints[]" value="flowOptimization">
+                                    <label class="form-check-label" for="flowOptimization">Optimize material flow paths</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="safetyZones" name="constraints[]" value="safetyZones">
+                                    <label class="form-check-label" for="safetyZones">Include safety zones</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="expansionReady" name="constraints[]" value="expansionReady">
+                                    <label class="form-check-label" for="expansionReady">Prepare for future expansion</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Export Options Section -->
+                        <div class="section">
+                            <h3>Export Options</h3>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="exportFormat" class="form-label">CAD Export Format</label>
+                                    <select class="form-select" id="exportFormat" name="exportFormat">
+                                        <option value="dxf">DXF</option>
+                                        <option value="dwg">DWG</option>
+                                        <option value="pdf">PDF</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="outputDetail" class="form-label">Output Detail Level</label>
+                                    <select class="form-select" id="outputDetail" name="outputDetail">
+                                        <option value="schematic">Schematic (2D)</option>
+                                        <option value="detailed">Detailed (2D)</option>
+                                        <option value="3d">3D Model</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="includeReport" name="includeReport" checked>
+                                <label class="form-check-label" for="includeReport">Include detailed efficiency report</label>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="reset" class="btn btn-outline-secondary me-md-2">Reset Form</button>
+                            <button type="button" id="previewBtn" class="btn btn-secondary me-md-2">Preview Layout</button>
+                            <button type="submit" class="btn btn-primary">Generate Layout</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="form-container h-100">
+                    <h3>Layout Preview</h3>
+                    <div id="layoutPreview" class="h-100">
+                        <div class="preview-placeholder">
+                            <p>Preview will appear here after entering dimensions and clicking "Preview Layout"</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle custom pallet size display
+            const palletSizeSelect = document.getElementById('palletSize');
+            const customPalletSizeDiv = document.getElementById('customPalletSize');
+            
+            palletSizeSelect.addEventListener('change', function() {
+                if (this.value === 'custom') {
+                    customPalletSizeDiv.classList.remove('d-none');
+                } else {
+                    customPalletSizeDiv.classList.add('d-none');
+                }
+            });
+            
+            // Handle adding fixed elements
+            const addFixedElementBtn = document.getElementById('addFixedElement');
+            const fixedElementsContainer = document.getElementById('fixedElementsContainer');
+            const elementTemplate = document.querySelector('.fixed-element-template');
+            let elementCounter = 0;
+            
+            addFixedElementBtn.addEventListener('click', function() {
+                const newElement = elementTemplate.cloneNode(true);
+                newElement.classList.remove('d-none', 'fixed-element-template');
+                newElement.classList.add('fixed-element-' + elementCounter);
+                
+                // Update element input names
+                const inputs = newElement.querySelectorAll('input, select');
+                inputs.forEach(input => {
+                    if (input.classList.contains('element-type')) {
+                        input.name = 'elements[' + elementCounter + '][type]';
+                    } else if (input.classList.contains('element-x')) {
+                        input.name = 'elements[' + elementCounter + '][x]';
+                    } else if (input.classList.contains('element-y')) {
+                        input.name = 'elements[' + elementCounter + '][y]';
+                    } else if (input.classList.contains('element-width')) {
+                        input.name = 'elements[' + elementCounter + '][width]';
+                    } else if (input.classList.contains('element-length')) {
+                        input.name = 'elements[' + elementCounter + '][length]';
+                    }
+                });
+                
+                // Add remove button functionality
+                const removeBtn = newElement.querySelector('.remove-element');
+                removeBtn.addEventListener('click', function() {
+                    newElement.remove();
+                });
+                
+                fixedElementsContainer.appendChild(newElement);
+                elementCounter++;
+            });
+            
+            // Handle preview button (placeholder for actual implementation)
+            const previewBtn = document.getElementById('previewBtn');
+            previewBtn.addEventListener('click', function() {
+                const length = document.getElementById('length').value;
+                const width = document.getElementById('width').value;
+                
+                if (!length || !width) {
+                    alert('Please enter warehouse dimensions first.');
+                    return;
+                }
+                
+                const previewArea = document.getElementById('layoutPreview');
+                previewArea.innerHTML = `
+                    <div class="text-center p-4">
+                        <p>Simple preview based on dimensions: ${length}m x ${width}m</p>
+                        <div style="width: 100%; height: 300px; background-color: #e9ecef; position: relative; border: 1px solid #ced4da;">
+                            <div style="position: absolute; top: 10px; left: 10px; right: 10px; bottom: 10px; border: 2px dashed #6c757d;"></div>
+                            <div style="position: absolute; bottom: 5px; right: 5px; font-size: 12px;">Scale: Approx representation</div>
+                        </div>
+                        <p class="mt-3 text-muted">Complete layout will be generated after form submission</p>
+                    </div>
+                `;
+            });
+        });
+    </script>
+</body>
+</html>
