@@ -9,13 +9,34 @@ travel distance, workflow efficiency, and accessibility.
 import math
 import random
 from typing import List, Dict, Tuple, Optional, Any, Callable
+from dataclasses import dataclass
+"""
+Defines the optimization problem structure for warehouse layout generation.
+"""
+
+
 
 # Type aliases for clarity
 LayoutSolution = Dict[str, Any]
 ObjectiveFunction = Callable[[LayoutSolution], float]
 ConstraintFunction = Callable[[LayoutSolution], bool]
 
+@dataclass
+class OptimizationProblem:
+    """Represents a warehouse layout optimization problem."""
+    warehouse_dimensions: tuple[float, float]
+    elements: List[Dict[str, Any]]
+    constraints: List[Dict[str, Any]]
+    objectives: List[Dict[str, Any]]
 
+@dataclass
+class OptimizationResult:
+    """Represents the result of an optimization run."""
+    success: bool
+    layout: Dict[str, Any]
+    score: float
+    violations: List[str]
+    iterations: int
 class LayoutOptimizer:
     """Base class for warehouse layout optimization algorithms."""
     
