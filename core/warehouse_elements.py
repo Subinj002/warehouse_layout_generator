@@ -487,7 +487,292 @@ class Wall(WarehouseElement):
             "thickness": thickness
         })
 
+# Add these classes after the existing classes in warehouse_elements.py
 
+class Shelf(WarehouseElement):
+    """Represents a shelf within a storage rack."""
+    
+    def __init__(self, 
+                 position: Point,
+                 width: float,
+                 length: float,
+                 height: float = 0.4,
+                 level: int = 0,
+                 parent_rack_id: str = None,
+                 capacity: float = 100.0,
+                 properties: Optional[Dict[str, Any]] = None):
+        super().__init__(
+            element_type=ElementType.STORAGE_AREA,  # We can add SHELF to ElementType if needed
+            position=position,
+            width=width,
+            length=length,
+            height=height,
+            orientation=Orientation.NORTH,
+            properties=properties or {}
+        )
+        self.level = level
+        self.parent_rack_id = parent_rack_id
+        self.capacity = capacity
+        
+        # Add to properties for serialization
+        self.properties.update({
+            "level": level,
+            "parent_rack_id": parent_rack_id,
+            "capacity": capacity
+        })
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'Shelf':
+        """Create a shelf from a dictionary representation."""
+        props = data.get("properties", {})
+        shelf = cls(
+            position=Point(data["position"]["x"], data["position"]["y"]),
+            width=data["dimensions"]["width"],
+            length=data["dimensions"]["length"],
+            height=data["dimensions"].get("height", 0.4),
+            level=props.get("level", 0),
+            parent_rack_id=props.get("parent_rack_id"),
+            capacity=props.get("capacity", 100.0),
+            properties=props
+        )
+        shelf.id = data["id"]
+        return shelf
+
+
+class PickingStation(StationaryElement):
+    """Represents a picking station in the warehouse."""
+    
+    def __init__(self, 
+                 position: Point,
+                 width: float,
+                 length: float,
+                 height: Optional[float] = 1.5,
+                 orientation: Orientation = Orientation.NORTH,
+                 station_type: str = "standard",
+                 capacity: int = 5,
+                 properties: Optional[Dict[str, Any]] = None):
+        super().__init__(
+            element_type=ElementType.PICKING_STATION,  # Add to ElementType enum
+            position=position,
+            width=width,
+            length=length,
+            height=height,
+            orientation=orientation,
+            properties=properties or {}
+        )
+        self.station_type = station_type
+        self.capacity = capacity
+        
+        self.properties.update({
+            "station_type": station_type,
+            "capacity": capacity
+        })
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'PickingStation':
+        """Create a picking station from a dictionary representation."""
+        props = data.get("properties", {})
+        station = cls(
+            position=Point(data["position"]["x"], data["position"]["y"]),
+            width=data["dimensions"]["width"],
+            length=data["dimensions"]["length"],
+            height=data["dimensions"].get("height", 1.5),
+            orientation=Orientation(data["orientation"]),
+            station_type=props.get("station_type", "standard"),
+            capacity=props.get("capacity", 5),
+            properties=props
+        )
+        station.id = data["id"]
+        return station
+
+
+class StorageZone(WarehouseElement):
+    """Represents a storage zone in the warehouse."""
+    
+    def __init__(self, 
+                 position: Point,
+                 width: float,
+                 length: float,
+                 height: Optional[float] = 0.0,
+                 orientation: Orientation = Orientation.NORTH,
+                 zone_type: str = "general",
+                 max_capacity: float = 10000.0,
+                 properties: Optional[Dict[str, Any]] = None):
+        super().__init__(
+            element_type=ElementType.STORAGE_AREA,
+            position=position,
+            width=width,
+            length=length,
+            height=height,
+            orientation=orientation,
+            properties=properties or {}
+        )
+        self.zone_type = zone_type
+        self.max_capacity = max_capacity
+        
+        self.properties.update({
+            "zone_type": zone_type,
+            "max_capacity": max_capacity
+        })
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'StorageZone':
+        """Create a storage zone from a dictionary representation."""
+        props = data.get("properties", {})
+        zone = cls(
+            position=Point(data["position"]["x"], data["position"]["y"]),
+            width=data["dimensions"]["width"],
+            length=data["dimensions"]["length"],
+            height=data["dimensions"].get("height", 0.0),
+            orientation=Orientation(data["orientation"]),
+            zone_type=props.get("zone_type", "general"),
+            max_capacity=props.get("max_capacity", 10000.0),
+            properties=props
+        )
+        zone.id = data["id"]
+        return zone
+
+
+class ReceivingArea(StationaryElement):
+    """Represents a receiving area in the warehouse."""
+    
+    def __init__(self, 
+                 position: Point,
+                 width: float,
+                 length: float,
+                 height: Optional[float] = 0.0,
+                 orientation: Orientation = Orientation.NORTH,
+                 processing_capacity: int = 10,
+                 properties: Optional[Dict[str, Any]] = None):
+        super().__init__(
+            element_type=ElementType.RECEIVING_DOCK,
+            position=position,
+            width=width,
+            length=length,
+            height=height,
+            orientation=orientation,
+            properties=properties or {}
+        )
+        self.processing_capacity = processing_capacity
+        
+        self.properties.update({
+            "processing_capacity": processing_capacity
+        })
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'ReceivingArea':
+        """Create a receiving area from a dictionary representation."""
+        props = data.get("properties", {})
+        area = cls(
+            position=Point(data["position"]["x"], data["position"]["y"]),
+            width=data["dimensions"]["width"],
+            length=data["dimensions"]["length"],
+            height=data["dimensions"].get("height", 0.0),
+            orientation=Orientation(data["orientation"]),
+            processing_capacity=props.get("processing_capacity", 10),
+            properties=props
+        )
+        area.id = data["id"]
+        return area
+
+
+class ShippingArea(StationaryElement):
+    """Represents a shipping area in the warehouse."""
+    
+    def __init__(self, 
+                 position: Point,
+                 width: float,
+                 length: float,
+                 height: Optional[float] = 0.0,
+                 orientation: Orientation = Orientation.NORTH,
+                 processing_capacity: int = 10,
+                 properties: Optional[Dict[str, Any]] = None):
+        super().__init__(
+            element_type=ElementType.SHIPPING_DOCK,
+            position=position,
+            width=width,
+            length=length,
+            height=height,
+            orientation=orientation,
+            properties=properties or {}
+        )
+        self.processing_capacity = processing_capacity
+        
+        self.properties.update({
+            "processing_capacity": processing_capacity
+        })
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'ShippingArea':
+        """Create a shipping area from a dictionary representation."""
+        props = data.get("properties", {})
+        area = cls(
+            position=Point(data["position"]["x"], data["position"]["y"]),
+            width=data["dimensions"]["width"],
+            length=data["dimensions"]["length"],
+            height=data["dimensions"].get("height", 0.0),
+            orientation=Orientation(data["orientation"]),
+            processing_capacity=props.get("processing_capacity", 10),
+            properties=props
+        )
+        area.id = data["id"]
+        return area
+
+
+class RestArea(StationaryElement):
+    """Represents a rest area or break room in the warehouse."""
+    
+    def __init__(self, 
+                 position: Point,
+                 width: float,
+                 length: float,
+                 height: Optional[float] = 2.5,
+                 orientation: Orientation = Orientation.NORTH,
+                 capacity: int = 10,
+                 amenities: List[str] = None,
+                 properties: Optional[Dict[str, Any]] = None):
+        super().__init__(
+            element_type=ElementType.CUSTOM,  # Add REST_AREA to ElementType if needed
+            position=position,
+            width=width,
+            length=length,
+            height=height,
+            orientation=orientation,
+            properties=properties or {}
+        )
+        self.capacity = capacity
+        self.amenities = amenities or ["seating"]
+        
+        self.properties.update({
+            "capacity": capacity,
+            "amenities": self.amenities
+        })
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'RestArea':
+        """Create a rest area from a dictionary representation."""
+        props = data.get("properties", {})
+        area = cls(
+            position=Point(data["position"]["x"], data["position"]["y"]),
+            width=data["dimensions"]["width"],
+            length=data["dimensions"]["length"],
+            height=data["dimensions"].get("height", 2.5),
+            orientation=Orientation(data["orientation"]),
+            capacity=props.get("capacity", 10),
+            amenities=props.get("amenities", ["seating"]),
+            properties=props
+        )
+        area.id = data["id"]
+        return area
+
+
+# Update ElementType enum by adding these lines in the class:
+class ElementType(Enum):
+    """Enumeration of possible warehouse element types."""
+    # ... (existing types)
+    PICKING_STATION = "picking_station"
+    SHELF = "shelf"
+    REST_AREA = "rest_area"
 class WarehouseLayout:
     """Represents the complete layout of a warehouse with all its elements."""
     
