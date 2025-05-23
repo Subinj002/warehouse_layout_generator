@@ -18,6 +18,29 @@ from typing import Dict, List, Optional, Tuple, Union
 import numpy as np
 
 from utils.geometry import Rectangle, Point, calculate_distance
+"""
+Constraint management module for warehouse layout generation.
+"""
+from typing import List, Dict, Any
+from .warehouse_elements import WarehouseElement
+
+class ConstraintManager:
+    """Manages and validates constraints for warehouse layouts."""
+    
+    def __init__(self):
+        self.constraints = []
+    
+    def add_constraint(self, constraint):
+        self.constraints.append(constraint)
+    
+    def validate_layout(self, layout) -> tuple[bool, List[str]]:
+        """Validate a layout against all registered constraints."""
+        violations = []
+        for constraint in self.constraints:
+            result = constraint.validate(layout)
+            if result:
+                violations.extend(result)
+        return len(violations) == 0, violations
 
 
 class ConstraintSeverity(Enum):
