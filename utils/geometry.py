@@ -20,6 +20,30 @@ Line = Tuple[Point, Point]
 Rect = Tuple[Point, Point]  # (top-left, bottom-right)
 Polygon = List[Point]
 
+"""
+Geometry utilities for warehouse layout calculations.
+"""
+from dataclasses import dataclass
+import math
+
+@dataclass
+class Rectangle:
+    """Represents a rectangle in 2D space."""
+    x: float
+    y: float
+    width: float
+    height: float
+
+def calculate_distance(point1: tuple[float, float], point2: tuple[float, float]) -> float:
+    """Calculate Euclidean distance between two points."""
+    return math.sqrt((point2[0] - point1[0])**2 + (point2[1] - point1[1])**2)
+
+def check_overlap(rect1: Rectangle, rect2: Rectangle) -> bool:
+    """Check if two rectangles overlap."""
+    return not (rect1.x + rect1.width < rect2.x or
+                rect2.x + rect2.width < rect1.x or
+                rect1.y + rect1.height < rect2.y or
+                rect2.y + rect2.height < rect1.y)
 
 def distance(p1: Point, p2: Point) -> float:
     """Calculate Euclidean distance between two points."""
