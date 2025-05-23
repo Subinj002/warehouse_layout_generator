@@ -24,6 +24,11 @@ class ElementType(Enum):
     COLUMN = "column"
     FIRE_EXIT = "fire_exit"
     CUSTOM = "custom"
+    WORKSTATION = "workstation"
+    DOCK_DOOR = "dock_door"
+    PICKING_STATION = "picking_station"
+    STORAGE_RACK = "storage_rack"  # If different from RACK
+    REST_AREA = "rest_area"
 
 
 class Orientation(Enum):
