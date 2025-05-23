@@ -1,1 +1,1 @@
-Ai powered warehouse layout generator
+AI powered warehouse layout generator
